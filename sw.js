@@ -1,4 +1,4 @@
-const CACHE_NAME = 'omr-arena-v1';
+const CACHE_NAME = 'omr-arena-v2';
 const ASSETS = [
   './',
   './index.html',
