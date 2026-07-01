@@ -1,0 +1,21 @@
+{
+  "short_name": "OMRArena",
+  "name": "OMR Arena Elite - JEE Workspace",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "icon-512x512.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#080d14",
+  "theme_color": "#080d14",
+  "display": "standalone",
+  "orientation": "portrait-primary"
+}
