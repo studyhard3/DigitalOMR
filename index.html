@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Premium Dynamic OMR - JEE Elite Workspace</title>
+  <title>Premium Dynamic OMR & PDF Viewer - JEE Elite Workspace</title>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#080d14">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js"></script>
   <script>window.MathJax = { tex: { inlineMath: [['$', '$']] } };</script>
   <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
@@ -20,7 +21,9 @@
       --text: #0f172a; --text-muted: #64748b; --primary: #2563eb; --primary-hover: #1d4ed8;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); transition: background 0.2s, color 0.2s, border-color 0.2s; }
-    body { background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+    body { background: var(--bg); color: var(--text); height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    body.scrollable-body { overflow-y: auto; overflow-x: hidden; height: auto; }
     
     .btn { padding: 10px 20px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; font-size: 14px; color: #fff; transition: all 0.2s; }
     .btn-p { background: var(--primary); } .btn-p:hover { background: var(--primary-hover); transform: translateY(-1px); }
@@ -29,35 +32,69 @@
     .btn-w { background: var(--warning); } .btn-w:hover { background: #b45309; }
     .btn-sec { background: rgba(148, 163, 184, 0.15); color: var(--text); } .btn-sec:hover { background: rgba(148, 163, 184, 0.25); }
     
-    header { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+    header { 
+      background: rgba(15, 23, 42, 0.8); 
+      backdrop-filter: blur(12px); 
+      border-bottom: 1px solid var(--border); 
+      padding: 16px 32px; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      position: sticky; 
+      top: 0;
+      z-index: 9999; 
+      flex-shrink: 0; 
+    }
     header h1 { font-size: 1.4rem; font-weight: 800; background: linear-gradient(135deg, #3b82f6, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; }
     .header-actions { display: flex; gap: 12px; align-items: center; }
     #userBanner { font-size: 13px; color: var(--text-muted); font-weight: 600; background: rgba(255,255,255,0.03); padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); }
 
-    main { flex: 1; display: flex; justify-content: center; padding: 32px; width: 100%; max-width: 1440px; margin: 0 auto; }
+    main { flex: 1; display: flex; justify-content: center; padding: 24px; width: 100%; max-width: 100%; margin: 0 auto; overflow: hidden; position: relative; }
     .view-card { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 32px; width: 100%; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15); }
     
-    #authPage { max-width: 440px; margin: 40px auto; text-align: center; display: none; }
+    #authPage { max-width: 440px; margin: 40px auto; text-align: center; display: none; height: fit-content; }
     .auth-toggle { display: flex; background: rgba(0,0,0,0.2); padding: 4px; border-radius: 12px; margin-bottom: 24px; border: 1px solid var(--border); }
     .auth-toggle button { flex: 1; background: transparent; border: none; padding: 12px; font-weight: 600; border-radius: 8px; color: var(--text-muted); cursor: pointer; }
     .auth-toggle button.active { background: var(--surface); color: var(--text); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
     .error-msg { color: var(--danger); font-size: 13px; margin: -12px 0 16px; text-align: left; display: none; }
 
-    #setupPage { max-width: 1100px; margin: 0 auto; display: none; grid-template-columns: 440px 1fr; gap: 32px; }
+    #setupPage { max-width: 1100px; margin: 0 auto; display: none; grid-template-columns: 440px 1fr; gap: 32px; width: 100%; height: 100%; overflow-y: auto; padding-bottom: 20px; }
     @media (max-width: 960px) { #setupPage { grid-template-columns: 1fr; } }
     
     .panel-title { font-size: 19px; font-weight: 700; margin-bottom: 24px; color: var(--text); border-left: 4px solid var(--primary); padding-left: 12px; }
     .panel-header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 12px; }
     .input-gp { margin-bottom: 20px; }
     .input-gp label { display: block; font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; letter-spacing: 0.5px; }
-    .input-gp input { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; background: rgba(0,0,0,0.15); color: var(--text); font-size: 15px; font-weight: 600; outline: none; }
-    .input-gp input:focus { border-color: var(--primary); background: rgba(0,0,0,0.25); }
+    .input-gp input, .input-gp select { width: 100%; padding: 14px 16px; border: 2px solid var(--border); border-radius: 12px; background: rgba(0,0,0,0.15); color: var(--text); font-size: 15px; font-weight: 600; outline: none; }
+    .input-gp select option { background: var(--surface); color: var(--text); }
+    .input-gp input:focus, .input-gp select:focus { border-color: var(--primary); background: rgba(0,0,0,0.25); }
 
     .empty-state { text-align: center; color: var(--text-muted); padding: 64px 20px; border: 2px dashed var(--border); border-radius: 16px; margin-top: 8px; font-size: 14px; }
     
-    .test-layout { display: none; width: 100%; gap: 32px; grid-template-columns: 1fr 360px; }
+    .test-layout { display: none; width: 100%; gap: 32px; grid-template-columns: 1fr 360px; max-width: 1440px; margin: 0 auto; height: 100%; overflow-y: auto; }
     @media (max-width: 1024px) { .test-layout { grid-template-columns: 1fr; } }
+
+    .pdf-test-layout { display: none; width: 100%; height: 100%; gap: 20px; grid-template-columns: 7.5fr 2.5fr; position: relative; }
+    @media (max-width: 1200px) { .pdf-test-layout { grid-template-columns: 7fr 3fr; } }
+    @media (max-width: 768px) { .pdf-test-layout { grid-template-columns: 1fr; height: 100%; overflow-y: auto; } }
+
+    .pdf-viewer-pane-wrapper { display: flex; flex-direction: column; height: 100%; width: 100%; overflow: hidden; }
+
+    .pdf-workspace { display: flex; width: 100%; height: 100%; background: #151c2c; border: 1px solid var(--border); border-radius: 14px; overflow: hidden; }
+    .pdf-sidebar { width: 160px; background: rgba(0,0,0,0.2); border-right: 1px solid var(--border); overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+    .pdf-sidebar::-webkit-scrollbar { width: 6px; }
+    .pdf-sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+    .pdf-thumbnail { width: 100%; cursor: pointer; border: 2px solid transparent; border-radius: 4px; transition: border-color 0.2s; opacity: 0.7; }
+    .pdf-thumbnail:hover { opacity: 1; border-color: var(--primary); }
+    .pdf-canvas-scroller-viewport { flex: 1; height: 100%; overflow-y: scroll !important; overflow-x: auto; padding: 16px; display: flex; flex-direction: column; gap: 24px; align-items: center; scroll-behavior: smooth; }
+    .pdf-page-canvas-node { max-width: 100%; height: auto; box-shadow: 0 10px 30px rgba(0,0,0,0.4); border-radius: 6px; background: #fff; display: block; }
+
+    .image-viewer-container { width: 100%; height: 100%; overflow-y: scroll !important; overflow-x: auto; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; padding: 16px; background: rgba(0,0,0,0.15); border-radius: 14px; }
+    .image-viewer-container img { max-width: 100%; height: auto; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.3); }
     
+    .media-dock { display: flex; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 8px 16px; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; flex-shrink: 0; }
+    .media-info { font-size: 13px; font-weight: 700; color: var(--text-muted); text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 40%; }
+
     .control-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 20px; margin-bottom: 32px; gap: 16px; flex-wrap: wrap; }
     .theme-toggle { display: inline-flex; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
     .theme-toggle button { background: transparent; border: none; padding: 8px 16px; font-size: 12px; font-weight: 700; border-radius: 6px; color: var(--text-muted); cursor: pointer; }
@@ -71,7 +108,7 @@
     .clock-card.critical { border-color: var(--danger); animation: pulse 1s infinite alternate; } .clock-card.critical .clock-val { color: var(--danger); }
     @keyframes pulse { 0% { opacity: 0.7; } 100% { opacity: 1; } }
 
-    .q-container { min-height: 260px; display: flex; flex-direction: column; justify-content: center; width: 100%; }
+    .q-container { min-height: 200px; display: flex; flex-direction: column; justify-content: center; width: 100%; }
     .q-pane { display: none; width: 100%; text-align: center; animation: fadeIn 0.2s ease; }
     .q-pane.active { display: block; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
@@ -94,6 +131,10 @@
     .action-row .btn { flex: 1; min-width: 120px; padding: 14px; }
 
     .side-panel { display: flex; flex-direction: column; gap: 24px; position: sticky; top: 100px; max-height: calc(100vh - 140px); overflow-y: auto; }
+    
+    .matrix-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 2500; justify-content: center; align-items: center; }
+    .matrix-modal-content { background: var(--surface); border: 1px solid var(--border); padding: 32px; border-radius: 24px; max-width: 520px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+
     .legend-box { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
     .leg-i { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: var(--text-muted); background: rgba(0,0,0,0.15); padding: 8px 12px; border-radius: 8px; }
     .leg-dot { width: 10px; height: 10px; border-radius: 3px; display: inline-block; margin-right: 8px; }
@@ -106,7 +147,7 @@
     .nav-grid button.rev { background: var(--warning); box-shadow: 0 2px 6px rgba(245,158,11,0.2); }
     .nav-grid button.curr { background: var(--primary); outline: 2px solid var(--text); outline-offset: 2px; transform: scale(1.05); box-shadow: 0 4px 10px rgba(59,130,246,0.3); }
 
-    #analysisPage { display: none; }
+    #analysisPage { display: none; width: 100%; max-width: 1000px; margin: 0 auto; height: 100%; overflow-y: auto; }
     .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 24px 0; }
     .sum-card { background: rgba(0,0,0,0.15); border: 1px solid var(--border); padding: 20px; border-radius: 16px; text-align: center; }
     .sum-card p { font-size: 12px; text-transform: uppercase; color: var(--text-muted); font-weight: 700; letter-spacing: 0.5px; }
@@ -143,7 +184,6 @@
       <button class="btn btn-p" style="background:var(--purple)" onclick="toggleCalc()">Calc</button>
       <button class="btn btn-p" onclick="toggleFS()">Fullscreen</button>
       <button class="btn btn-d" id="submitBtn" onclick="openModal()" style="display:none">End Exam</button>
-      <button class="btn btn-sec" id="logoutBtn" onclick="handleLogout()" style="display:none; padding: 8px 16px; font-size: 13px;">Sign Out</button>
     </div>
   </header>
 
@@ -166,10 +206,20 @@
       <div class="view-card">
         <div class="panel-title">New Assessment Session</div>
         <div class="input-gp"><label>Custom Test Designation Name</label><input type="text" id="testName" placeholder="e.g., JEE Advanced Mock Part A" maxlength="40"></div>
+        <div class="input-gp">
+          <label>Workspace Rendering Engine</label>
+          <select id="interfaceStyle" onchange="toggleUploadFieldState()">
+            <option value="classic_omr">Classic Standard Split OMR</option>
+            <option value="pdf_pro_omr" selected>Elite PDF Pro View (Dual Screen)</option>
+          </select>
+        </div>
+        <div class="input-gp" id="pdfUploadInputContainer">
+          <label>Test Booklet Documents (Select One PDF or Multiple Images)</label>
+          <input type="file" id="testMediaInput" accept="application/pdf, image/*" multiple>
+        </div>
         <div class="input-gp"><label>Total Questions</label><input type="number" id="numQuestions" value="30" min="1"></div>
         <div class="input-gp"><label>Test Timeline Minutes</label><input type="number" id="testDuration" value="180" min="1"></div>
         <button class="btn btn-s" id="startBtn" style="width:100%; padding:14px; font-size:15px; margin-top:8px" onclick="beginExam()">Initialize Session</button>
-        <button class="btn btn-d" id="clearBtn" style="width:100%; margin-top:12px; padding:12px" onclick="wipeCache()">Reset Running Cache</button>
       </div>
 
       <div class="view-card" style="display: flex; flex-direction: column;">
@@ -183,7 +233,7 @@
         </div>
         <div id="historyTableContainer" class="table-container" style="display:none; margin-top:0px;">
           <table>
-            <thead><tr><th>Session Name</th><th>Attempted Metrics</th><th>Time Spent</th><th>Date Attempted</th></tr></thead>
+            <thead><tr><th>Session Name</th><th>Attempted</th><th>Time Spent</th><th>Date</th><th>Action</th></tr></thead>
             <tbody id="historyBody"></tbody>
           </table>
         </div>
@@ -195,7 +245,7 @@
       <div class="view-card" style="display:flex; flex-direction:column">
         <div class="control-bar">
           <div class="theme-toggle">
-            <button id="darkTheme" onclick="setTheme('dark')">Dark</button>
+            <button id="darkTheme" class="active" onclick="setTheme('dark')">Dark</button>
             <button id="lightTheme" onclick="setTheme('light')">Light</button>
           </div>
           <div class="timer-flex">
@@ -212,38 +262,89 @@
         </div>
       </div>
 
-      <div class="side-panel view-card">
+      <div class="side-panel view-card" id="classicSidebarPanel">
         <h3 style="font-size:16px; font-weight:700;">Question Matrix Palette</h3>
-        <div class="legend-box">
-          <div class="leg-i"><span class="leg-dot" style="background:var(--success)"></span>Done <span class="leg-num" id="cntAns">0</span></div>
-          <div class="leg-i"><span class="leg-dot" style="background:var(--danger)"></span>Blank <span class="leg-num" id="cntUnans">0</span></div>
-          <div class="leg-i"><span class="leg-dot" style="background:var(--warning)"></span>Review <span class="leg-num" id="cntRev">0</span></div>
-          <div class="leg-i"><span class="leg-dot" style="background:var(--primary)"></span>Active</div>
-        </div>
+        <div class="legend-box" id="classicLegendBox"></div>
         <div class="nav-grid" id="matrixGrid"></div>
       </div>
     </div>
 
+    <div id="pdfQuizLayout" class="pdf-test-layout">
+      <div class="pdf-viewer-pane-wrapper">
+        <div class="media-dock" id="mediaSwitcherDock" style="display:none; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sec" style="padding: 6px 14px; font-size:12px;" onclick="prevMediaFile()">← Prev File</button>
+            <button class="btn btn-sec" style="padding: 6px 14px; font-size:12px;" onclick="togglePdfSidebar()">🗂️ Toggle Sidebar</button>
+          </div>
+          
+          <span class="media-info" id="mediaDockStats">Document Viewer</span>
+          
+          <div style="display:flex; gap:8px;">
+            <button class="btn btn-sec" style="padding: 6px 14px; font-size:12px;" onclick="nextMediaFile()">Next File →</button>
+          </div>
+        </div>
+
+        <div id="pdfMediaContainer" style="flex:1; width:100%; overflow:hidden; position:relative;">
+          <div class="empty-state" style="border:none; margin:auto; padding-top:120px;">No Test Document Linked. Please attach a file on the Setup page.</div>
+        </div>
+      </div>
+      
+      <div class="view-card" style="display:flex; flex-direction:column; padding:20px; justify-content:space-between; height:100%; overflow-y:auto; flex-shrink:0;">
+        <div style="width:100%">
+          <div class="timer-flex" style="flex-direction:column; gap:12px; margin-bottom:20px;">
+            <div class="clock-card" id="pdfTotalClock" style="min-width:100%; padding:8px 12px;"><span class="clock-lbl">Remaining</span><span class="clock-val" id="pdfTotalTimeDisplay" style="font-size:20px;">00:00:00</span></div>
+            <div class="clock-card" style="min-width:100%; padding:8px 12px;"><span class="clock-lbl">This Question</span><span class="clock-val" id="pdfQTimeDisplay" style="color:var(--purple); font-size:20px;">00:00:00</span></div>
+          </div>
+          
+          <button class="btn btn-p" style="width:100%; background:var(--purple); padding:12px 8px; font-size:12px;" onclick="openMatrixPaletteOverlay()">Track Progress Grid</button>
+          
+          <div style="margin-top:24px; border-top:1px solid var(--border); padding-top:20px;">
+             <form id="pdfOmrForm" class="q-container" style="min-height:180px;" onsubmit="event.preventDefault()"></form>
+          </div>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:8px; margin-top:16px;">
+          <div style="display:flex; gap:6px;"><button class="btn btn-sec" style="padding:10px 4px; flex:1;" onclick="goPrev()">Prev</button><button class="btn btn-s" style="padding:10px 4px; flex:1;" onclick="goNext()">Next</button></div>
+          <button class="btn btn-w" id="pdfRevBtn" style="font-size:12px; padding:8px;" onclick="flagReview()">Review Tag</button>
+          <button class="btn btn-d" style="font-size:11px; padding:6px; background:rgba(239,68,68,0.15); color:var(--danger)" onclick="wipeSelection()">Clear Selection</button>
+        </div>
+      </div>
+    </div>
+
     <div id="analysisPage" class="view-card">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px">
-        <h2 id="analysisHeadline" style="font-size:22px; font-weight:800;">Performance Summary Portfolio</h2>
-        <div style="display:flex; gap:8px"><button class="btn btn-sec" onclick="goHome()">Dashboard Home</button><button class="btn btn-s" onclick="exportPDF()">Export PDF Sheet</button></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px;">
+        <h2 id="analysisHeadline" style="font-size:22px; font-weight:800;">Assessment Analytics Metrics Terminal</h2>
+        <div style="display:flex; gap:10px;">
+          <button class="btn btn-p" onclick="exportPDF()">Export PDF Analytics Report</button>
+          <button class="btn btn-sec" onclick="goHome()">Back to Dashboard</button>
+        </div>
       </div>
       <div id="printableArea">
         <div class="summary-grid">
-          <div class="sum-card"><p>Total Items</p><span id="anTotal" style="color:var(--primary)">0</span></div>
-          <div class="sum-card"><p>Marked Attempted</p><span id="anAttempted" style="color:var(--success)">0</span></div>
-          <div class="sum-card"><p>Left Unassigned</p><span id="anUnattempted" style="color:var(--text-muted)">0</span></div>
+          <div class="sum-card"><p>Total Questions</p><span id="anTotal" style="color:var(--primary)">0</span></div>
+          <div class="sum-card"><p>Attempted Slots</p><span id="anAttempted" style="color:var(--success)">0</span></div>
+          <div class="sum-card"><p>Unattempted Slots</p><span id="anUnattempted" style="color:var(--text-muted)">0</span></div>
         </div>
         <div class="table-container">
           <table>
-            <thead><tr><th>Item Code Index</th><th>Evaluation Archetype Type</th><th>Marked Responses</th><th>Recorded Time Spans</th></tr></thead>
+            <thead><tr><th>Index ID</th><th>Problem Schema Type</th><th>Your Processed Selection</th><th>Time Spent Distribution</th></tr></thead>
             <tbody id="analysisBody"></tbody>
           </table>
         </div>
       </div>
     </div>
   </main>
+
+  <div class="matrix-overlay" id="matrixPaletteOverlay" onclick="closeMatrixPaletteOverlaySub(event)">
+    <div class="matrix-modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h3 style="font-size:18px; font-weight:700;">Question Matrix Palette</h3>
+        <button class="btn btn-sec" style="padding:4px 12px; font-size:12px;" onclick="closeMatrixPaletteOverlay()">Close View</button>
+      </div>
+      <div class="legend-box" id="overlayLegendBox" style="margin-bottom:20px;"></div>
+      <div class="nav-grid" id="overlayMatrixGrid"></div>
+    </div>
+  </div>
 
   <div id="calcBox" class="calc-box">
     <div class="calc-head" id="calcHead"><span>Scientific Utility Workspace</span><span style="cursor:pointer; color:var(--danger)" onclick="toggleCalc()">✕</span></div>
@@ -271,6 +372,531 @@
     </div>
   </div>
 
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
+
+    const STORAGE_KEY = 'omr_premium_state', HISTORY_KEY = 'omr_attempts_history';
+    let currentIdx = 0, totalItems = 0, totalSecs = 0, itemSecs = 0, mainTimerInterval = null;
+    let doneSet = new Set(), reviewSet = new Set(), timingMap = {}, itemSchema = [], activeSessionName = "Unnamed Test";
+    let activeInterfaceStyle = "classic_omr";
+    let authMode = "login", activeUser = null, dbModuleInstance = null, authModuleInstance = null;
+    
+    let attachedMediaCollection = []; 
+    let activeMediaFileIdx = 0;
+    let currentPdfScale = 1.5;
+
+    window.togglePdfSidebar = function() {
+      const sidebar = document.querySelector('.pdf-sidebar');
+      if (sidebar) sidebar.style.display = sidebar.style.display === 'none' ? 'flex' : 'none';
+    };
+
+    const $ = id => document.getElementById(id);
+    function fmtTime(s) { return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map(v => String(v).padStart(2, '0')).join(':'); }
+    
+    window.switchAuthMode = function(mode) {
+      authMode = mode; $('authError').style.display = 'none';
+      $('authTitle').textContent = mode === 'login' ? "Sign In to Dashboard" : "Create New Account Profile";
+      $('primaryAuthBtn').textContent = mode === 'login' ? "Authenticate Identity" : "Register New User Vector";
+      $('toggleLoginBtn').classList.toggle('active', mode === 'login');
+      $('toggleRegisterBtn').classList.toggle('active', mode === 'register');
+    };
+
+    window.toggleUploadFieldState = function() {
+      const style = $('interfaceStyle').value;
+      $('pdfUploadInputContainer').style.display = style === 'pdf_pro_omr' ? 'block' : 'none';
+    };
+
+    window.openMatrixPaletteOverlay = function() { $('matrixPaletteOverlay').style.display = 'flex'; };
+    window.closeMatrixPaletteOverlay = function() { $('matrixPaletteOverlay').style.display = 'none'; };
+    window.closeMatrixPaletteOverlaySub = function(e) { if(e.target.id === 'matrixPaletteOverlay') window.closeMatrixPaletteOverlay(); };
+
+    function harvestAnswers() {
+      let pkg = {};
+      doneSet.forEach(i => {
+        if (!itemSchema[i]) return;
+        const type = itemSchema[i].type;
+        const selectorStr = `input[name="item${i}"]:checked`;
+        if (type === 'single_choice') { const chk = document.querySelector(selectorStr); if (chk) pkg[i] = chk.value; } 
+        else if (type === 'multiple_choice') { const chks = Array.from(document.querySelectorAll(selectorStr)).map(e => e.value); if (chks.length > 0) pkg[i] = chks; } 
+        else { const fld = document.querySelector(`[name="item${i}"]`); if (fld && fld.value.trim() !== '') pkg[i] = fld.value.trim(); }
+      });
+      return pkg;
+    }
+
+    function writeState() { 
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ 
+        doneSet: [...doneSet], reviewSet: [...reviewSet], currentIdx, totalSecs, timingMap, 
+        itemSchema, totalItems, answers: harvestAnswers(), activeSession: true, activeSessionName, activeInterfaceStyle 
+      })); 
+    }
+
+    function renderAttemptsHistory() {
+      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'), tbody = $('historyBody');
+      if (history.length === 0) { $('historyTableContainer').style.display = 'none'; $('historyEmptyState').style.display = 'block'; return; }
+      $('historyTableContainer').style.display = 'block'; $('historyEmptyState').style.display = 'none'; tbody.innerHTML = '';
+      history.slice().reverse().forEach((attempt, revIdx) => {
+        const actualIndex = history.length - 1 - revIdx, row = tbody.insertRow();
+        row.className = "history-row"; 
+        row.onclick = () => loadHistoricalAnalysis(actualIndex);
+        const dateVal = attempt.dateString || (attempt.timestamp ? new Date(attempt.timestamp).toLocaleDateString() : "N/A");
+        row.innerHTML = `<td style="font-weight:600;">${attempt.name}</td>
+                         <td><span style="color:var(--success); font-weight:700">${attempt.score.attempted}</span> / ${attempt.score.total} Qs</td>
+                         <td style="font-family:monospace; color:var(--text-muted)">${fmtTime(attempt.timeSpent)}</td>
+                         <td style="font-size:12px; color:var(--text-muted)">${dateVal}</td>
+                         <td><button class="btn btn-d" style="padding: 4px 10px; font-size: 11px;" onclick="deleteAttempt(event, ${actualIndex})">Delete</button></td>`;
+      });
+    }
+
+    window.deleteAttempt = function(event, actualIndex) {
+      event.stopPropagation(); 
+      if(confirm("Are you sure you want to permanently delete this past attempt?")) {
+        const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+        history.splice(actualIndex, 1);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        renderAttemptsHistory();
+      }
+    };
+
+    function loadHistoricalAnalysis(index) {
+      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'), attempt = history[index]; if (!attempt) return;
+      $('analysisBody').innerHTML = ''; let dataStore = attempt.responsesMap || {}, localSchema = attempt.itemSchema || [], localTimings = attempt.timingsPerQuestionMap || {};
+      for (let i = 0; i < attempt.score.total; i++) {
+        let saved = dataStore[i]; saved = saved ? (Array.isArray(saved) ? saved.join(', ') : saved) : "Unassigned Blank";
+        const row = $('analysisBody').insertRow(); row.innerHTML = `<td>${i + 1}</td><td style="text-transform:capitalize">${(localSchema[i]?.type || 'single_choice').replace('_',' ')}</td><td style="font-weight:700; color:${saved.includes('Blank')?'var(--text-muted)':'var(--primary)'}">${saved}</td><td>${localTimings[i] || 0}s</td>`;
+      }
+      $('anTotal').textContent = attempt.score.total; $('anAttempted').textContent = attempt.score.attempted; $('anUnattempted').textContent = attempt.score.total - attempt.score.attempted;
+      $('analysisHeadline').textContent = `Analytics: ${attempt.name} (${attempt.dateString || 'Past Run'})`;
+      
+      document.body.classList.add('scrollable-body');
+      $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'none'; $('pdfQuizLayout').style.display = 'none'; $('calcBox').style.display = 'none'; $('submitBtn').style.display = 'none'; $('analysisPage').style.display = 'block';
+    }
+
+    window.exportHistoryJSON = function() {
+      const blob = new Blob([localStorage.getItem(HISTORY_KEY) || '[]'], {type: "application/json"}), url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = `OMR_Analytics_History_Backup.json`; link.click(); URL.revokeObjectURL(url);
+    };
+    window.triggerImportJSON = function() { $('importFileControl').click(); };
+    window.processImportJSON = function(e) {
+      const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+      reader.onload = function(evt) {
+        try { const parsed = JSON.parse(evt.target.result); if (Array.isArray(parsed)) { localStorage.setItem(HISTORY_KEY, JSON.stringify(parsed)); renderAttemptsHistory(); alert("Data uploaded successfully."); } else alert("Invalid format mapping structure."); } 
+        catch(err) { alert("Failure processing configuration parameter streams."); }
+      }; reader.readAsText(file);
+    };
+
+    window.alterItemType = function(idx, targetType) {
+      if (!itemSchema[idx] || itemSchema[idx].type === targetType) return; const history = harvestAnswers(); delete history[idx]; doneSet.delete(idx);
+      itemSchema[idx].type = targetType; rebuildFormViews(history); renderActiveItem(currentIdx); evaluateMatrixCounts(); writeState();
+    };
+
+    function injectLegendStructure(targetId) {
+      const el = $(targetId); if (!el) return;
+      el.innerHTML = `
+        <div class="leg-i"><span class="leg-dot" style="background:var(--success)"></span>Done <span class="leg-num" id="${targetId}_cntAns">0</span></div>
+        <div class="leg-i"><span class="leg-dot" style="background:var(--danger)"></span>Blank <span class="leg-num" id="${targetId}_cntUnans">0</span></div>
+        <div class="leg-i"><span class="leg-dot" style="background:var(--warning)"></span>Review <span class="leg-num" id="${targetId}_cntRev">0</span></div>
+        <div class="leg-i"><span class="leg-dot" style="background:var(--primary)"></span>Active</div>`;
+    }
+
+    function rebuildFormViews(pastAnswers = {}) {
+      const container = $('omrForm'); const pdfContainer = $('pdfOmrForm');
+      container.innerHTML = ''; pdfContainer.innerHTML = '';
+      
+      for (let i = 0; i < totalItems; i++) {
+        const schema = itemSchema[i], record = pastAnswers[i];
+        const makeElementNodeBlock = () => {
+          const block = document.createElement('div');
+          block.className = `q-pane ${i === currentIdx ? 'active' : ''}`; block.dataset.index = i;
+          let toggleHTML = `<div class="switch-group" style="margin-bottom:20px; transform:scale(0.9);">
+            <button type="button" class="switch-btn ${schema.type === 'single_choice' ? 'active' : ''}" onclick="window.alterItemType(${i}, 'single_choice')">Single</button>
+            <button type="button" class="switch-btn ${schema.type === 'multiple_choice' ? 'active' : ''}" onclick="window.alterItemType(${i}, 'multiple_choice')">Multiple</button>
+            <button type="button" class="switch-btn ${schema.type === 'integer' ? 'active' : ''}" onclick="window.alterItemType(${i}, 'integer')">Integer</button>
+          </div>`;
+          let inputs = '';
+          if (schema.type === 'single_choice' || schema.type === 'multiple_choice') {
+            inputs += `<div class="bubble-grid" style="gap:12px; margin:12px auto;">`;
+            ['A','B','C','D'].forEach(opt => {
+              const isSet = schema.type === 'single_choice' ? record === opt : (Array.isArray(record) && record.includes(opt));
+              inputs += `<label class="bubble-lbl"><input type="${schema.type === 'single_choice' ? 'radio' : 'checkbox'}" name="item${i}" value="${opt}" onchange="evaluateStatus(${i})" ${isSet ? 'checked' : ''}><div class="bubble-ui ${schema.type === 'multiple_choice' ? 'square-ui' : ''}" style="width:44px; height:44px; font-size:16px;">${opt}</div></label>`;
+            }); inputs += `</div>`;
+          } else { inputs += `<input type="number" class="num-input" style="padding:10px; font-size:18px; max-width:180px;" name="item${i}" value="${record || ''}" placeholder="Value" oninput="evaluateStatus(${i}, this)">`; }
+          block.innerHTML = `<div class="q-title" style="font-size:18px; margin-bottom:12px;">Question ${i + 1}</div>${toggleHTML}${inputs}`;
+          return block;
+        };
+        container.appendChild(makeElementNodeBlock());
+        pdfContainer.appendChild(makeElementNodeBlock());
+      }
+      if (window.MathJax?.typesetPromise) MathJax.typesetPromise([container, pdfContainer]).catch(err => console.log(err));
+    }
+
+    function pullState() {
+      const cached = localStorage.getItem(STORAGE_KEY); if (!cached) return false;
+      try {
+        const data = JSON.parse(cached); if (!data.activeSession) return false;
+        doneSet = new Set(data.doneSet); reviewSet = new Set(data.reviewSet); currentIdx = data.currentIdx; totalSecs = data.totalSecs;
+        timingMap = data.timingMap || {}; itemSchema = data.itemSchema; totalItems = data.totalItems; activeSessionName = data.activeSessionName || "Unnamed Test";
+        activeInterfaceStyle = data.activeInterfaceStyle || "classic_omr";
+        
+        rebuildFormViews(data.answers || {}); 
+        buildMatrixGrid('matrixGrid'); buildMatrixGrid('overlayMatrixGrid');
+        injectLegendStructure('classicLegendBox'); injectLegendStructure('overlayLegendBox');
+
+        $('totalTimeDisplay').textContent = fmtTime(totalSecs); $('pdfTotalTimeDisplay').textContent = fmtTime(totalSecs);
+        pushTimerClockUI(totalSecs);
+        
+        $('setupPage').style.display = 'none';
+        if (activeInterfaceStyle === 'pdf_pro_omr') { 
+          document.body.classList.remove('scrollable-body');
+          $('pdfQuizLayout').style.display = 'grid'; 
+        } 
+        else { 
+          document.body.classList.add('scrollable-body');
+          $('quizLayout').style.display = 'grid'; 
+        }
+        $('submitBtn').style.display = 'block';
+        
+        renderActiveItem(currentIdx); kickstartClocks(); evaluateMatrixCounts(); return true;
+      } catch (e) { localStorage.removeItem(STORAGE_KEY); return false; }
+    }
+
+    function kickstartClocks() {
+      clearInterval(mainTimerInterval);
+      mainTimerInterval = setInterval(() => {
+        if (totalSecs <= 0) { clearInterval(mainTimerInterval); window.executeSubmit(); return; }
+        totalSecs--; itemSecs++; timingMap[currentIdx] = (timingMap[currentIdx] || 0) + 1; writeState();
+        const formatted = fmtTime(totalSecs); const formattedItem = fmtTime(itemSecs);
+        $('totalTimeDisplay').textContent = formatted; $('pdfTotalTimeDisplay').textContent = formatted;
+        pushTimerClockUI(totalSecs); 
+        $('qTimeDisplay').textContent = formattedItem; $('pdfQTimeDisplay').textContent = formattedItem;
+      }, 1000);
+    }
+
+    function pushTimerClockUI(s) { 
+      const box = $('totalClock'); const pdfBox = $('pdfTotalClock');
+      if(box) { box.className = 'clock-card'; if (s <= 300) box.classList.add('critical'); else if (s <= 900) box.classList.add('warning'); }
+      if(pdfBox) { pdfBox.className = 'clock-card'; if (s <= 300) pdfBox.classList.add('critical'); else if (s <= 900) pdfBox.classList.add('warning'); }
+    }
+
+    window.beginExam = function() {
+      if (localStorage.getItem(STORAGE_KEY) && JSON.parse(localStorage.getItem(STORAGE_KEY)).activeSession) { pullState(); return; }
+      totalItems = parseInt($('numQuestions').value) || 30; if (totalItems <= 0) return;
+      activeSessionName = $('testName').value.trim() || "JEE Mock Session Run";
+      activeInterfaceStyle = $('interfaceStyle').value;
+      itemSchema = Array.from({length: totalItems}, () => ({type: 'single_choice'}));
+      totalSecs = (parseInt($('testDuration').value) || 180) * 60; timingMap = {}; currentIdx = 0; doneSet.clear(); reviewSet.clear();
+      
+      const fileControl = $('testMediaInput');
+      attachedMediaCollection = [];
+      activeMediaFileIdx = 0;
+
+      if (activeInterfaceStyle === 'pdf_pro_omr' && fileControl && fileControl.files && fileControl.files.length > 0) {
+        let loadedCount = 0;
+        const totalFilesToLoad = fileControl.files.length;
+        
+        for (let i = 0; i < totalFilesToLoad; i++) {
+          const fileObj = fileControl.files[i];
+          const reader = new FileReader();
+          
+          reader.onload = function(e) {
+            attachedMediaCollection.push({
+              type: fileObj.type,
+              url: e.target.result, 
+              name: fileObj.name
+            });
+            loadedCount++;
+            if (loadedCount === totalFilesToLoad) {
+              renderActiveMediaToViewport();
+            }
+          };
+          
+          if (fileObj.type === "application/pdf") {
+            reader.readAsArrayBuffer(fileObj); 
+          } else {
+            reader.readAsDataURL(fileObj);
+          }
+        }
+      } else if (activeInterfaceStyle === 'pdf_pro_omr') {
+        $('pdfMediaContainer').innerHTML = `<div class="empty-state" style="border:none; margin:auto; padding-top:120px;">No Test Booklet Linked. Standard placeholder deployed.</div>`;
+        $('mediaSwitcherDock').style.display = 'none';
+      }
+
+      rebuildFormViews(); 
+      buildMatrixGrid('matrixGrid'); buildMatrixGrid('overlayMatrixGrid');
+      injectLegendStructure('classicLegendBox'); injectLegendStructure('overlayLegendBox');
+      evaluateMatrixCounts();
+      
+      $('setupPage').style.display = 'none';
+      if (activeInterfaceStyle === 'pdf_pro_omr') { 
+        document.body.classList.remove('scrollable-body');
+        $('pdfQuizLayout').style.display = 'grid'; 
+      } 
+      else { 
+        document.body.classList.add('scrollable-body');
+        $('quizLayout').style.display = 'grid'; 
+      }
+      $('submitBtn').style.display = 'block';
+      renderActiveItem(currentIdx); kickstartClocks();
+
+      window.history.pushState({ inTest: true }, "");
+    };
+
+    async function renderPdfToCanvasContainer(arrayBuffer, targetContainer) {
+      targetContainer.innerHTML = '';
+      
+      const workspace = document.createElement('div');
+      workspace.className = 'pdf-workspace';
+      
+      const sidebar = document.createElement('div');
+      sidebar.className = 'pdf-sidebar';
+      
+      const scroller = document.createElement('div');
+      scroller.className = 'pdf-canvas-scroller-viewport';
+      
+      workspace.appendChild(sidebar);
+      workspace.appendChild(scroller);
+      targetContainer.appendChild(workspace);
+
+      try {
+        const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+        const pdf = await loadingTask.promise;
+        const dpr = window.devicePixelRatio || 1; 
+        
+        for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+          const page = await pdf.getPage(pageNum);
+          
+          const baseViewport = page.getViewport({ scale: currentPdfScale }); 
+          const mainCanvas = document.createElement('canvas');
+          mainCanvas.className = 'pdf-page-canvas-node';
+          const mainCtx = mainCanvas.getContext('2d');
+          
+          mainCanvas.width = Math.floor(baseViewport.width * dpr);
+          mainCanvas.height = Math.floor(baseViewport.height * dpr);
+          mainCanvas.style.width = Math.floor(baseViewport.width) + "px";
+          mainCanvas.style.height = Math.floor(baseViewport.height) + "px";
+          scroller.appendChild(mainCanvas);
+
+          const thumbViewport = page.getViewport({ scale: 0.3 }); 
+          const thumbCanvas = document.createElement('canvas');
+          thumbCanvas.className = 'pdf-thumbnail';
+          const thumbCtx = thumbCanvas.getContext('2d');
+          
+          thumbCanvas.width = thumbViewport.width;
+          thumbCanvas.height = thumbViewport.height;
+          thumbCanvas.onclick = () => { mainCanvas.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+          sidebar.appendChild(thumbCanvas);
+
+          const transform = dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null;
+          
+          page.render({ canvasContext: mainCtx, transform: transform, viewport: baseViewport }).promise;
+          page.render({ canvasContext: thumbCtx, viewport: thumbViewport }).promise;
+        }
+      } catch (err) {
+        targetContainer.innerHTML = `<div class="empty-state" style="border:none; margin:auto; color:var(--danger)">Core Rendering Exception Fault: ${err.message}</div>`;
+      }
+    }
+
+    function renderActiveMediaToViewport() {
+      if(attachedMediaCollection.length === 0) return;
+      const fileData = attachedMediaCollection[activeMediaFileIdx];
+      const container = $('pdfMediaContainer');
+      
+      if (fileData.type === "application/pdf") {
+        container.innerHTML = `<div class="empty-state" style="border:none; margin:auto; padding-top:120px;">Rasterizing Document Matrix vector nodes...</div>`;
+        renderPdfToCanvasContainer(fileData.url, container);
+      } else if (fileData.type.startsWith("image/")) {
+        container.innerHTML = `<div class="image-viewer-container"><img src="${fileData.url}" alt="Workspace Sheet Layer Image Layer"></div>`;
+      }
+
+      $('mediaSwitcherDock').style.display = 'flex';
+      if(attachedMediaCollection.length > 1) {
+        $('mediaDockStats').textContent = `File ${activeMediaFileIdx + 1} of ${attachedMediaCollection.length} : ${fileData.name}`;
+      } else {
+        $('mediaDockStats').textContent = `Document Viewer: ${fileData.name}`;
+      }
+    }
+
+    window.nextMediaFile = function() {
+      if (activeMediaFileIdx < attachedMediaCollection.length - 1) {
+        activeMediaFileIdx++;
+        renderActiveMediaToViewport();
+      }
+    };
+
+    window.prevMediaFile = function() {
+      if (activeMediaFileIdx > 0) {
+        activeMediaFileIdx--;
+        renderActiveMediaToViewport();
+      }
+    };
+
+    function renderActiveItem(idx) {
+      if(totalItems === 0) return; 
+      const framesClassic = $('omrForm').children; const framesPdf = $('pdfOmrForm').children;
+      for (let i = 0; i < totalItems; i++) {
+        if(framesClassic[i]) framesClassic[i].classList.toggle('active', i === idx);
+        if(framesPdf[i]) framesPdf[i].classList.toggle('active', i === idx);
+      }
+      currentIdx = idx; itemSecs = timingMap[currentIdx] || 0; 
+      const formattedItem = fmtTime(itemSecs);
+      $('qTimeDisplay').textContent = formattedItem; $('pdfQTimeDisplay').textContent = formattedItem;
+      
+      repaintPaletteStyles('matrixGrid'); repaintPaletteStyles('overlayMatrixGrid');
+      const activeBtnBgs = reviewSet.has(currentIdx) ? 'var(--warning)' : '';
+      $('revBtn').style.background = activeBtnBgs; $('pdfRevBtn').style.background = activeBtnBgs;
+      writeState();
+    }
+
+    window.goNext = function() { if (currentIdx < totalItems - 1) renderActiveItem(currentIdx + 1); };
+    window.goPrev = function() { if (currentIdx > 0) renderActiveItem(currentIdx - 1); };
+
+    window.wipeSelection = function() {
+      if (!itemSchema[currentIdx]) return;
+      const activeSchemaType = itemSchema[currentIdx].type;
+      const targetQueryString = `[name="item${currentIdx}"]`;
+      if (activeSchemaType === 'integer') { document.querySelectorAll(targetQueryString).forEach(el => el.value = ''); } 
+      else { document.querySelectorAll(targetQueryString).forEach(el => el.checked = false); }
+      doneSet.delete(currentIdx); repaintPaletteStyles('matrixGrid'); repaintPaletteStyles('overlayMatrixGrid'); evaluateMatrixCounts(); writeState();
+    };
+
+    window.flagReview = function() { 
+      reviewSet.has(currentIdx) ? reviewSet.delete(currentIdx) : reviewSet.add(currentIdx); 
+      const activeBtnBgs = reviewSet.has(currentIdx) ? 'var(--warning)' : ''; 
+      $('revBtn').style.background = activeBtnBgs; $('pdfRevBtn').style.background = activeBtnBgs; 
+      repaintPaletteStyles('matrixGrid'); repaintPaletteStyles('overlayMatrixGrid'); writeState(); 
+    };
+
+    window.evaluateStatus = function(idx, activeEl = null) {
+      if (!itemSchema[idx]) return;
+      const type = itemSchema[idx].type; 
+      let flagged = false;
+      
+      if (type === 'integer') {
+        const val = activeEl ? activeEl.value : (document.querySelector(`[name="item${idx}"]`)?.value || '');
+        document.querySelectorAll(`[name="item${idx}"]`).forEach(node => {
+          if (node !== document.activeElement && node !== activeEl) node.value = val;
+        });
+        flagged = val.trim() !== '';
+      } else {
+        if (type === 'single_choice') flagged = document.querySelector(`input[name="item${idx}"]:checked`) !== null;
+        else if (type === 'multiple_choice') flagged = document.querySelectorAll(`input[name="item${idx}"]:checked`).length > 0;
+        
+        const activeChoicesList = Array.from(document.querySelectorAll(`input[name="item${idx}"]:checked`)).map(el => el.value);
+        document.querySelectorAll(`input[name="item${idx}"]`).forEach(node => { 
+          node.checked = activeChoicesList.includes(node.value); 
+        });
+      }
+
+      flagged ? doneSet.add(idx) : doneSet.delete(idx); 
+      repaintPaletteStyles('matrixGrid'); 
+      repaintPaletteStyles('overlayMatrixGrid'); 
+      evaluateMatrixCounts(); 
+      writeState();
+    };
+
+    function evaluateMatrixCounts() { 
+      const unassignedCount = totalItems - doneSet.size;
+      const metricsConfigArray = [
+        { ans: 'cntAns', un: 'cntUnans', rev: 'cntRev' },
+        { ans: 'classicLegendBox_cntAns', un: 'classicLegendBox_cntUnans', rev: 'classicLegendBox_cntRev' },
+        { ans: 'overlayLegendBox_cntAns', un: 'overlayLegendBox_cntUnans', rev: 'overlayLegendBox_cntRev' }
+      ];
+      metricsConfigArray.forEach(set => {
+        if($(set.ans)) $(set.ans).textContent = doneSet.size;
+        if($(set.un)) $(set.un).textContent = unassignedCount;
+        if($(set.rev)) $(set.rev).textContent = reviewSet.size;
+      });
+    }
+    
+    function buildMatrixGrid(gridId) { 
+      const box = $(gridId); if (!box) return; box.innerHTML = ''; 
+      for (let i = 0; i < totalItems; i++) { 
+        const btn = document.createElement('button'); btn.textContent = i + 1; btn.dataset.target = i; 
+        btn.onclick = () => { renderActiveItem(i); window.closeMatrixPaletteOverlay(); }; box.appendChild(btn); 
+      } 
+    }
+
+    function repaintPaletteStyles(gridId) {
+      const box = $(gridId); if (!box) return; const nodes = box.children;
+      for (let i = 0; i < nodes.length; i++) {
+        const btn = nodes[i], target = parseInt(btn.dataset.target, 10); btn.className = '';
+        if (target === currentIdx) btn.classList.add('curr'); else if (reviewSet.has(target)) btn.classList.add('rev'); else if (doneSet.has(target)) btn.classList.add('ans'); else btn.classList.add('unans');
+      }
+    }
+
+    window.openModal = function() { $('mAns').textContent = doneSet.size; $('mUn').textContent = totalItems - doneSet.size; $('mRv').textContent = reviewSet.size; $('modalOverlay').style.display = 'flex'; };
+    window.closeModal = function() { $('modalOverlay').style.display = 'none'; };
+
+    window.executeSubmit = async function() {
+      window.closeModal(); clearInterval(mainTimerInterval); localStorage.removeItem(STORAGE_KEY);
+      let countFilled = 0, computedTotalTimeUsed = 0; $('analysisBody').innerHTML = ''; 
+      const dataStore = harvestAnswers(), currentFormattedDate = new Date().toLocaleDateString();
+      
+      for (let i = 0; i < totalItems; i++) {
+        let saved = dataStore[i]; saved = saved ? (Array.isArray(saved) ? saved.join(', ') : saved) : "Unassigned Blank"; if(dataStore[i]) countFilled++;
+        const deltaSecs = timingMap[i] || 0; computedTotalTimeUsed += deltaSecs;
+        const row = $('analysisBody').insertRow(); row.innerHTML = `<td>${i + 1}</td><td style="text-transform:capitalize">${itemSchema[i].type.replace('_',' ')}</td><td style="font-weight:700; color:${saved.includes('Blank')?'var(--text-muted)':'var(--primary)'}">${saved}</td><td>${deltaSecs}s</td>`;
+      }
+      
+      const historyLog = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+      historyLog.push({ name: activeSessionName, score: { total: totalItems, attempted: countFilled }, timeSpent: computedTotalTimeUsed, timestamp: Date.now(), dateString: currentFormattedDate, responsesMap: dataStore, itemSchema: itemSchema, timingsPerQuestionMap: timingMap });
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(historyLog));
+      
+      $('anTotal').textContent = totalItems; $('anAttempted').textContent = countFilled; $('anUnattempted').textContent = totalItems - countFilled; 
+      $('analysisHeadline').textContent = `Analytics: ${activeSessionName} (${currentFormattedDate})`;
+      
+      document.body.classList.add('scrollable-body');
+      $('quizLayout').style.display = 'none'; $('pdfQuizLayout').style.display = 'none'; $('calcBox').style.display = 'none'; $('submitBtn').style.display = 'none'; $('analysisPage').style.display = 'block';
+
+      if(dbModuleInstance && activeUser) {
+        const payload = {
+          uid: activeUser.uid, userType: activeUser.isAnonymous ? "Guest" : "Registered",
+          testTitle: activeSessionName, durationSecondsUsed: computedTotalTimeUsed, totalQuestionsCount: totalItems,
+          totalAttemptedCount: countFilled, responsesMap: dataStore, timingsPerQuestionMap: timingMap, createdTimestamp: new Date().toISOString()
+        };
+        try { await dbModuleInstance.addDoc(dbModuleInstance.collection(dbModuleInstance.db, "omr_assessments"), payload); } 
+        catch (error) { console.error("Database cloud syncing log error arrays: ", error); }
+      }
+    };
+
+    window.goHome = function() { 
+      clearInterval(mainTimerInterval); 
+      attachedMediaCollection = [];
+      document.body.classList.add('scrollable-body');
+      $('quizLayout').style.display = 'none'; $('pdfQuizLayout').style.display = 'none'; $('analysisPage').style.display = 'none'; $('submitBtn').style.display = 'none'; $('setupPage').style.display = 'grid'; renderAttemptsHistory(); 
+    };
+    
+    window.setTheme = function(m) { document.body.className = m === 'light' ? 'light-theme' : ''; if(m==='light') { document.body.classList.add('scrollable-body'); } else { if($('pdfQuizLayout').style.display==='grid') document.body.classList.remove('scrollable-body'); } $('darkTheme').className = m === 'dark' ? 'active' : ''; $('lightTheme').className = m === 'light' ? 'active' : ''; };
+    window.toggleFS = function() { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); };
+
+    window.exportPDF = function() {
+      const mode = document.body.className; window.setTheme('light');
+      html2pdf().set({ margin: 0.4, filename: `OMR_Analysis_${activeSessionName.replace(/\s+/g,'_')}.pdf`, image: {type: 'jpeg', quality: 0.98}, html2canvas: {scale: 2}, jsPDF: {unit: 'in', format: 'a4', orientation: 'portrait'} }).from($('printableArea')).save().then(() => { if(mode !== 'light-theme') window.setTheme('dark'); });
+    };
+
+    let strExp = ""; 
+    window.toggleCalc = function() { const box = $('calcBox'); box.style.display = box.style.display === 'block' ? 'none' : 'block'; };
+    window.cApp = function(v) { strExp += v; $('calcDisplay').value = strExp; };
+    window.cBsp = function() { strExp = strExp.slice(0, -1); $('calcDisplay').value = strExp; };
+    window.cClr = function() { strExp = ""; $('calcDisplay').value = ""; };
+    window.cEval = function() { try { let out = new Function('return ' + strExp.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**').replace(/π/g, 'Math.PI').replace(/√\(/g, 'Math.sqrt('))(); if (out === undefined || isNaN(out) || !isFinite(out)) throw new Error(); out = Math.round(out * 10000000) / 10000000; $('calcDisplay').value = out; strExp = out.toString(); } catch (e) { $('calcDisplay').value = "Expression Error"; strExp = ""; } };
+
+    configureDragElement($("calcBox"));
+    function configureDragElement(el) {
+      let x1 = 0, y1 = 0, x2 = 0, y2 = 0; $('calcHead').onmousedown = e => { e.preventDefault(); x2 = e.clientX; y2 = e.clientY; document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; }; document.onmousemove = ev => { ev.preventDefault(); x1 = x2 - ev.clientX; y1 = y2 - ev.clientY; x2 = ev.clientX; y2 = ev.clientY; el.style.top = (el.offsetTop - y1) + "px"; el.style.left = (el.offsetLeft - x1) + "px"; el.style.bottom = "auto"; el.style.right = "auto"; }; };
+    }
+
+    window.addEventListener('popstate', (event) => {
+      if (mainTimerInterval) {
+        window.history.pushState({ inTest: true }, "");
+        if (confirm("You are in an active assessment session environment. End and submit exam profile logs?")) {
+          window.executeSubmit();
+        }
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => { window.setTheme('dark'); window.toggleUploadFieldState(); document.body.classList.add('scrollable-body'); });
+  </script>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInAnonymously, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -282,16 +908,12 @@
       messagingSenderId: "295761794532", appId: "1:295761794532:web:a558283aca2b416593a3f1", measurementId: "G-TLGC1HYRHR"
     };
 
-    const app = initializeApp(firebaseConfig), auth = getAuth(app), db = getFirestore(app);
-    let activeUser = null, authMode = "login";
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
 
-    window.switchAuthMode = function(mode) {
-      authMode = mode; $('authError').style.display = 'none';
-      $('authTitle').textContent = mode === 'login' ? "Sign In to Dashboard" : "Create New Account Profile";
-      $('primaryAuthBtn').textContent = mode === 'login' ? "Authenticate Identity" : "Register New User Vector";
-      $('toggleLoginBtn').classList.toggle('active', mode === 'login');
-      $('toggleRegisterBtn').classList.toggle('active', mode === 'register');
-    };
+    window.dbModuleInstance = { db, collection, addDoc };
+    window.authModuleInstance = auth;
 
     window.processAuthEmail = async function() {
       const email = $('authEmail').value.trim(), password = $('authPassword').value, errorDiv = $('authError');
@@ -306,233 +928,19 @@
       try { await signInAnonymously(auth); } catch(err) { $('authError').textContent = `Guest Auth Fail: ${err.message}`; $('authError').style.display = 'block'; }
     };
 
-    window.handleLogout = async function() {
-      if(confirm("Confirm user session termination run?")) { clearInterval(mainTimerInterval); localStorage.removeItem(STORAGE_KEY); await signOut(auth); location.reload(); }
-    };
-
     onAuthStateChanged(auth, (user) => {
       if (user) {
-        activeUser = user; $('authPage').style.display = 'none'; $('logoutBtn').style.display = 'inline-flex';
+        window.activeUser = user; $('authPage').style.display = 'none';
         $('userBanner').textContent = user.isAnonymous ? "Mode: Anonymous Guest" : `User: ${user.email}`;
-        if (!pullState()) { $('setupPage').style.display = 'grid'; $('clearBtn').style.display = (localStorage.getItem(STORAGE_KEY) || localStorage.getItem(HISTORY_KEY)) ? 'block' : 'none'; }
+        if (!pullState()) { 
+          document.body.classList.add('scrollable-body');
+          $('setupPage').style.display = 'grid'; 
+        }
         renderAttemptsHistory();
       } else {
-        activeUser = null; $('userBanner').textContent = ""; $('logoutBtn').style.display = 'none';
-        $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'none'; $('analysisPage').style.display = 'none'; $('authPage').style.display = 'block';
-      }
-    });
-
-    const originalExecuteSubmit = window.executeSubmit;
-    window.executeSubmit = async function() {
-      originalExecuteSubmit();
-      const dataStore = harvestAnswers(); let countFilled = 0, computedTotalTimeUsed = 0;
-      for (let i = 0; i < totalItems; i++) { if (dataStore[i]) countFilled++; computedTotalTimeUsed += (timingMap[i] || 0); }
-      const payload = {
-        uid: activeUser ? activeUser.uid : "unknown_vector", userType: activeUser && activeUser.isAnonymous ? "Guest" : "Registered",
-        testTitle: activeSessionName, durationSecondsUsed: computedTotalTimeUsed, totalQuestionsCount: totalItems,
-        totalAttemptedCount: countFilled, responsesMap: dataStore, timingsPerQuestionMap: timingMap, createdTimestamp: new Date().toISOString()
-      };
-      try { const docRef = await addDoc(collection(db, "omr_assessments"), payload); console.log("Synced. Token ID: ", docRef.id); } 
-      catch (error) { console.error("Database Error: ", error); }
-    };
-  </script>
-
-  <script>
-    const STORAGE_KEY = 'omr_premium_state', HISTORY_KEY = 'omr_attempts_history';
-    let currentIdx = 0, totalItems = 0, totalSecs = 0, itemSecs = 0, mainTimerInterval;
-    let doneSet = new Set(), reviewSet = new Set(), timingMap = {}, itemSchema = [], activeSessionName = "Unnamed Test";
-    const $ = id => document.getElementById(id);
-
-    function fmtTime(s) { return [Math.floor(s / 3600), Math.floor((s % 3600) / 60), s % 60].map(v => String(v).padStart(2, '0')).join(':'); }
-    function pushTimerClockUI(s) { const box = $('totalClock'); if(!box) return; box.className = 'clock-card'; if (s <= 300) box.classList.add('critical'); else if (s <= 900) box.classList.add('warning'); }
-
-    function harvestAnswers() {
-      let pkg = {};
-      doneSet.forEach(i => {
-        const type = itemSchema[i].type;
-        if (type === 'single_choice') { const chk = document.querySelector(`input[name="item${i}"]:checked`); if (chk) pkg[i] = chk.value; } 
-        else if (type === 'multiple_choice') { const chks = Array.from(document.querySelectorAll(`input[name="item${i}"]:checked`)).map(e => e.value); if (chks.length > 0) pkg[i] = chks; } 
-        else { const fld = document.querySelector(`[name="item${i}"]`); if (fld && fld.value.trim() !== '') pkg[i] = fld.value.trim(); }
-      });
-      return pkg;
-    }
-
-    function writeState() { localStorage.setItem(STORAGE_KEY, JSON.stringify({ doneSet: [...doneSet], reviewSet: [...reviewSet], currentIdx, totalSecs, timingMap, itemSchema, totalItems, answers: harvestAnswers(), activeSession: true, activeSessionName })); }
-
-    function renderAttemptsHistory() {
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'), tbody = $('historyBody');
-      if (history.length === 0) { $('historyTableContainer').style.display = 'none'; $('historyEmptyState').style.display = 'block'; return; }
-      $('historyTableContainer').style.display = 'block'; $('historyEmptyState').style.display = 'none'; tbody.innerHTML = '';
-      history.slice().reverse().forEach((attempt, revIdx) => {
-        const actualIndex = history.length - 1 - revIdx, row = tbody.insertRow();
-        row.className = "history-row"; row.onclick = () => loadHistoricalAnalysis(actualIndex);
-        const dateVal = attempt.dateString || (attempt.timestamp ? new Date(attempt.timestamp).toLocaleDateString() : "N/A");
-        row.innerHTML = `<td style="font-weight:600;">${attempt.name}</td><td><span style="color:var(--success); font-weight:700">${attempt.score.attempted}</span> / ${attempt.score.total} Qs</td><td style="font-family:monospace; color:var(--text-muted)">${fmtTime(attempt.timeSpent)}</td><td style="font-size:12px; color:var(--text-muted)">${dateVal}</td>`;
-      });
-    }
-
-    function loadHistoricalAnalysis(index) {
-      const history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'), attempt = history[index]; if (!attempt) return;
-      $('analysisBody').innerHTML = ''; let dataStore = attempt.responsesMap || {}, localSchema = attempt.itemSchema || [], localTimings = attempt.timingsPerQuestionMap || {};
-      for (let i = 0; i < attempt.score.total; i++) {
-        let saved = dataStore[i]; saved = saved ? (Array.isArray(saved) ? saved.join(', ') : saved) : "Unassigned Blank";
-        row = $('analysisBody').insertRow(); row.innerHTML = `<td>${i + 1}</td><td style="text-transform:capitalize">${(localSchema[i]?.type || 'single_choice').replace('_',' ')}</td><td style="font-weight:700; color:${saved.includes('Blank')?'var(--text-muted)':'var(--primary)'}">${saved}</td><td>${localTimings[i] || 0}s</td>`;
-      }
-      $('anTotal').textContent = attempt.score.total; $('anAttempted').textContent = attempt.score.attempted; $('anUnattempted').textContent = attempt.score.total - attempt.score.attempted;
-      $('analysisHeadline').textContent = `Analytics: ${attempt.name} (${attempt.dateString || 'Past Run'})`;
-      $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'none'; $('calcBox').style.display = 'none'; $('submitBtn').style.display = 'none'; $('analysisPage').style.display = 'block';
-    }
-
-    function exportHistoryJSON() {
-      const blob = new Blob([localStorage.getItem(HISTORY_KEY) || '[]'], {type: "application/json"}), url = URL.createObjectURL(blob), link = document.createElement('a');
-      link.href = url; link.download = `OMR_Analytics_History_Backup.json`; link.click(); URL.revokeObjectURL(url);
-    }
-    function triggerImportJSON() { $('importFileControl').click(); }
-    function processImportJSON(e) {
-      const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-      reader.onload = function(evt) {
-        try { const parsed = JSON.parse(evt.target.result); if (Array.isArray(parsed)) { localStorage.setItem(HISTORY_KEY, JSON.stringify(parsed)); renderAttemptsHistory(); alert("Data uploaded successfully."); } else alert("Invalid structure vector format mapping array data."); } 
-        catch(err) { alert("Failure processing dataset parameters."); }
-      }; reader.readAsText(file);
-    }
-
-    function alterItemType(idx, targetType) {
-      if (itemSchema[idx].type === targetType) return; const history = harvestAnswers(); delete history[idx]; doneSet.delete(idx);
-      itemSchema[idx].type = targetType; rebuildFormViews(history); renderActiveItem(currentIdx); evaluateMatrixCounts(); writeState();
-    }
-
-    function rebuildFormViews(pastAnswers = {}) {
-      const container = $('omrForm'); container.innerHTML = '';
-      for (let i = 0; i < totalItems; i++) {
-        const schema = itemSchema[i], record = pastAnswers[i], block = document.createElement('div');
-        block.className = `q-pane ${i === currentIdx ? 'active' : ''}`; block.dataset.index = i;
-        let toggleHTML = `<div class="switch-group">
-          <button type="button" class="switch-btn ${schema.type === 'single_choice' ? 'active' : ''}" onclick="alterItemType(${i}, 'single_choice')">Single</button>
-          <button type="button" class="switch-btn ${schema.type === 'multiple_choice' ? 'active' : ''}" onclick="alterItemType(${i}, 'multiple_choice')">Multiple</button>
-          <button type="button" class="switch-btn ${schema.type === 'integer' ? 'active' : ''}" onclick="alterItemType(${i}, 'integer')">Integer</button>
-        </div>`;
-        let inputs = '';
-        if (schema.type === 'single_choice' || schema.type === 'multiple_choice') {
-          inputs += `<div class="bubble-grid">`;
-          ['A','B','C','D'].forEach(opt => {
-            const isSet = schema.type === 'single_choice' ? record === opt : (Array.isArray(record) && record.includes(opt));
-            inputs += `<label class="bubble-lbl"><input type="${schema.type === 'single_choice' ? 'radio' : 'checkbox'}" name="item${i}" value="${opt}" onchange="evaluateStatus(${i})" ${isSet ? 'checked' : ''}><div class="bubble-ui ${schema.type === 'multiple_choice' ? 'square-ui' : ''}">${opt}</div></label>`;
-          }); inputs += `</div>`;
-        } else { inputs += `<input type="number" class="num-input" name="item${i}" value="${record || ''}" placeholder="Enter Value" oninput="evaluateStatus(${i})">`; }
-        block.innerHTML = `<div class="q-title">Question Module ${i + 1}</div>${toggleHTML}${inputs}`; container.appendChild(block);
-      }
-      if (window.MathJax?.typesetPromise) MathJax.typesetPromise([container]);
-    }
-
-    function pullState() {
-      const cached = localStorage.getItem(STORAGE_KEY); if (!cached) return false;
-      try {
-        const data = JSON.parse(cached); if (!data.activeSession) return false;
-        doneSet = new Set(data.doneSet); reviewSet = new Set(data.reviewSet); currentIdx = data.currentIdx; totalSecs = data.totalSecs;
-        timingMap = data.timingMap || {}; itemSchema = data.itemSchema; totalItems = data.totalItems; activeSessionName = data.activeSessionName || "Unnamed Test";
-        rebuildFormViews(data.answers || {}); buildMatrixGrid(); $('totalTimeDisplay').textContent = fmtTime(totalSecs); pushTimerClockUI(totalSecs);
-        $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'grid'; $('submitBtn').style.display = 'block';
-        renderActiveItem(currentIdx); kickstartClocks(); evaluateMatrixCounts(); return true;
-      } catch (e) { localStorage.removeItem(STORAGE_KEY); return false; }
-    }
-
-    function kickstartClocks() {
-      clearInterval(mainTimerInterval);
-      mainTimerInterval = setInterval(() => {
-        if (totalSecs <= 0) { clearInterval(mainTimerInterval); executeSubmit(); return; }
-        totalSecs--; itemSecs++; timingMap[currentIdx] = (timingMap[currentIdx] || 0) + 1; writeState();
-        $('totalTimeDisplay').textContent = fmtTime(totalSecs); pushTimerClockUI(totalSecs); $('qTimeDisplay').textContent = fmtTime(itemSecs);
-      }, 1000);
-    }
-
-    function beginExam() {
-      if (localStorage.getItem(STORAGE_KEY) && JSON.parse(localStorage.getItem(STORAGE_KEY)).activeSession) { pullState(); return; }
-      totalItems = parseInt($('numQuestions').value) || 30; if (totalItems <= 0) return;
-      activeSessionName = $('testName').value.trim() || "JEE Mock Session Run";
-      itemSchema = Array.from({length: totalItems}, () => ({type: 'single_choice'}));
-      totalSecs = (parseInt($('testDuration').value) || 180) * 60; timingMap = {}; currentIdx = 0; doneSet.clear(); reviewSet.clear();
-      rebuildFormViews(); buildMatrixGrid(); evaluateMatrixCounts();
-      $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'grid'; $('submitBtn').style.display = 'block';
-      renderActiveItem(currentIdx); kickstartClocks();
-    }
-
-    function renderActiveItem(idx) {
-      if(totalItems === 0) return; const frames = $('omrForm').children;
-      for (let i = 0; i < frames.length; i++) frames[i].classList.toggle('active', i === idx);
-      currentIdx = idx; itemSecs = timingMap[currentIdx] || 0; $('qTimeDisplay').textContent = fmtTime(itemSecs);
-      repaintPaletteStyles(); $('revBtn').style.background = reviewSet.has(currentIdx) ? 'var(--warning)' : ''; writeState();
-    }
-
-    const goNext = () => { if (currentIdx < totalItems - 1) renderActiveItem(currentIdx + 1); }, goPrev = () => { if (currentIdx > 0) renderActiveItem(currentIdx - 1); };
-
-    function wipeSelection() {
-      if (itemSchema[currentIdx].type === 'integer') { const el = document.querySelector(`[name="item${currentIdx}"]`); if (el) el.value = ''; } 
-      else { document.getElementsByName(`item${currentIdx}`).forEach(el => el.checked = false); }
-      doneSet.delete(currentIdx); repaintPaletteStyles(); evaluateMatrixCounts(); writeState();
-    }
-
-    function flagReview() { reviewSet.has(currentIdx) ? reviewSet.delete(currentIdx) : reviewSet.add(currentIdx); $('revBtn').style.background = reviewSet.has(currentIdx) ? 'var(--warning)' : ''; repaintPaletteStyles(); writeState(); }
-
-    function evaluateStatus(idx) {
-      const type = itemSchema[idx].type; let flagged = false;
-      if (type === 'single_choice') flagged = document.querySelector(`input[name="item${idx}"]:checked`) !== null;
-      else if (type === 'multiple_choice') flagged = document.querySelectorAll(`input[name="item${idx}"]:checked`).length > 0;
-      else { const el = document.querySelector(`[name="item${idx}"]`); flagged = el && el.value.trim() !== ''; }
-      flagged ? doneSet.add(idx) : doneSet.delete(idx); repaintPaletteStyles(); evaluateMatrixCounts(); writeState();
-    }
-
-    function evaluateMatrixCounts() { $('cntAns').textContent = doneSet.size; $('cntUnans').textContent = totalItems - doneSet.size; $('cntRev').textContent = reviewSet.size; }
-    function buildMatrixGrid() { const box = $('matrixGrid'); box.innerHTML = ''; for (let i = 0; i < totalItems; i++) { const btn = document.createElement('button'); btn.textContent = i + 1; btn.dataset.target = i; btn.onclick = () => renderActiveItem(i); box.appendChild(btn); } }
-
-    function repaintPaletteStyles() {
-      const nodes = $('matrixGrid').children;
-      for (let i = 0; i < nodes.length; i++) {
-        const btn = nodes[i], target = parseInt(btn.dataset.target, 10); btn.className = '';
-        if (target === currentIdx) btn.classList.add('curr'); else if (reviewSet.has(target)) btn.classList.add('rev'); else if (doneSet.has(target)) btn.classList.add('ans'); else btn.classList.add('unans');
-      }
-    }
-
-    const openModal = () => { $('mAns').textContent = doneSet.size; $('mUn').textContent = totalItems - doneSet.size; $('mRv').textContent = reviewSet.size; $('modalOverlay').style.display = 'flex'; }, closeModal = () => $('modalOverlay').style.display = 'none';
-
-    function executeSubmit() {
-      closeModal(); clearInterval(mainTimerInterval); localStorage.removeItem(STORAGE_KEY);
-      let countFilled = 0, computedTotalTimeUsed = 0; $('analysisBody').innerHTML = ''; const dataStore = harvestAnswers(), currentFormattedDate = new Date().toLocaleDateString();
-      for (let i = 0; i < totalItems; i++) {
-        let saved = dataStore[i]; saved = saved ? (Array.isArray(saved) ? saved.join(', ') : saved) : "Unassigned Blank"; if(dataStore[i]) countFilled++;
-        const deltaSecs = timingMap[i] || 0; computedTotalTimeUsed += deltaSecs;
-        row = $('analysisBody').insertRow(); row.innerHTML = `<td>${i + 1}</td><td style="text-transform:capitalize">${itemSchema[i].type.replace('_',' ')}</td><td style="font-weight:700; color:${saved.includes('Blank')?'var(--text-muted)':'var(--primary)'}">${saved}</td><td>${deltaSecs}s</td>`;
-      }
-      const historyLog = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
-      historyLog.push({ name: activeSessionName, score: { total: totalItems, attempted: countFilled }, timeSpent: computedTotalTimeUsed, timestamp: Date.now(), dateString: currentFormattedDate, responsesMap: dataStore, itemSchema: itemSchema, timingsPerQuestionMap: timingMap });
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(historyLog));
-      $('anTotal').textContent = totalItems; $('anAttempted').textContent = countFilled; $('anUnattempted').textContent = totalItems - countFilled; $('analysisHeadline').textContent = `Analytics: ${activeSessionName} (${currentFormattedDate})`;
-      $('quizLayout').style.display = 'none'; $('calcBox').style.display = 'none'; $('submitBtn').style.display = 'none'; $('analysisPage').style.display = 'block';
-    }
-
-    function goHome() { clearInterval(mainTimerInterval); $('quizLayout').style.display = 'none'; $('analysisPage').style.display = 'none'; $('submitBtn').style.display = 'none'; $('setupPage').style.display = 'grid'; renderAttemptsHistory(); }
-    const setTheme = m => { document.body.className = m === 'light' ? 'light-theme' : ''; $('darkTheme').className = m === 'dark' ? 'active' : ''; $('lightTheme').className = m === 'light' ? 'active' : ''; }, toggleFS = () => { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); };
-    function wipeCache() { if (confirm("Clear local run parameters?")) { localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(HISTORY_KEY); location.reload(); } }
-
-    function exportPDF() {
-      const mode = document.body.className; setTheme('light');
-      html2pdf().set({ margin: 0.4, filename: `OMR_Analysis_${activeSessionName.replace(/\s+/g,'_')}.pdf`, image: {type: 'jpeg', quality: 0.98}, html2canvas: {scale: 2}, jsPDF: {unit: 'in', format: 'a4', orientation: 'portrait'} }).from($('printableArea')).save().then(() => { if(mode !== 'light-theme') setTheme('dark'); });
-    }
-
-    let strExp = ""; const toggleCalc = () => { const box = $('calcBox'); box.style.display = box.style.display === 'block' ? 'none' : 'block'; }, cApp = v => { strExp += v; $('calcDisplay').value = strExp; }, cBsp = () => { strExp = strExp.slice(0, -1); $('calcDisplay').value = strExp; }, cClr = () => { strExp = ""; $('calcDisplay').value = ""; };
-    function cEval() { try { let out = new Function('return ' + strExp.replace(/×/g, '*').replace(/÷/g, '/').replace(/\^/g, '**').replace(/π/g, 'Math.PI').replace(/√\(/g, 'Math.sqrt('))(); if (out === undefined || isNaN(out) || !isFinite(out)) throw new Error(); out = Math.round(out * 10000000) / 10000000; $('calcDisplay').value = out; strExp = out.toString(); } catch (e) { $('calcDisplay').value = "Expression Error"; strExp = ""; } }
-
-    configureDragElement($("calcBox"));
-    function configureDragElement(el) {
-      let x1 = 0, y1 = 0, x2 = 0, y2 = 0; $('calcHead').onmousedown = e => { e.preventDefault(); x2 = e.clientX; y2 = e.clientY; document.onmouseup = () => { document.onmouseup = null; document.onmousemove = null; }; document.onmousemove = ev => { ev.preventDefault(); x1 = x2 - ev.clientX; y1 = y2 - ev.clientY; x2 = ev.clientX; y2 = ev.clientY; el.style.top = (el.offsetTop - y1) + "px"; el.style.left = (el.offsetLeft - x1) + "px"; el.style.bottom = "auto"; el.style.right = "auto"; }; };
-    }
-    document.addEventListener('DOMContentLoaded', () => setTheme('dark'));
-
-    // PWA Service Worker Registration
-    window.addEventListener('load', () => {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker Registered Successfully.', reg.scope))
-          .catch(err => console.error('Service Worker Operations Fault:', err));
+        window.activeUser = null; $('userBanner').textContent = "";
+        document.body.classList.add('scrollable-body');
+        $('setupPage').style.display = 'none'; $('quizLayout').style.display = 'none'; $('pdfQuizLayout').style.display = 'none'; $('analysisPage').style.display = 'none'; $('authPage').style.display = 'block';
       }
     });
   </script>
